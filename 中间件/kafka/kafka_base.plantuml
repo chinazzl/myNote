@@ -1,10 +1,17 @@
 
-@startmindmap
+@startmindmap "kafka概述"
 * kafka 
   ** 主题
   ** 生产者
+    *** 自定义分区策略
+      ****_ 按消息键保序策略
+      ****_ 随机策略
+    ***_ 轮询策略
   ** 消费者
-    *** 消费者位移
+    ***_ 消费者位移
+    *** 分区策略 
+      ****_ ROUND
+      ****_ RANGE
   ** Broker
   ** 备份机制
   ** 分区
@@ -15,4 +22,39 @@
     *** ISR：与leader完全同步
   ** OSR：follower和leader没有同步
 @endmindmap
+
+' 消费组
+@startuml "消费组"
+(*) --> "消费者实例" 
+if "所有实例是否是同一group" then 
+--> [true]"消息队列模型"
+--> (*)
+else 
+--> [false] "发布/订阅模型"
+--> (*)
+endif
+@enduml
+
+
+协调者用于对消费者组进行rebanlance后将消息分配到哪个消费者中，当一个生产者发送主题消息时，消费者组会将 定义好的
+groupid.hashcode % _consumer_offsets主题的分区数，默认50，计算的数据就是
+
+@startuml "协调者"
+(*) -->"生产者发送消息"
+--> "协调者"
+--> [group.id.hashcode % offsetsTopicPartitionCount]"分发到_consumer_offsets哪个分区的Leader"
+--> [根据计算的分区号到_consumer_offsets中找到Leader副本在那个Broker]"找到协调者"
+--> (*)
+@enduml
+
+@startuml "Rebanlance"
+(*) --> "触发Rebanlance" 
+note left: "三种情况"
+--> "选举各个分区的Leader" 
+note right: "根据优先副本原则，默认五分钟触发选举"
+--> "接收消息，计算协调者所在的broker" 
+note left: "选举副本接收消息"
+--> (*)
+@enduml
+
 

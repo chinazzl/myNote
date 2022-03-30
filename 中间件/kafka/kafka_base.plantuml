@@ -1,0 +1,18 @@
+
+@startmindmap
+* kafka 
+  ** 主题
+  ** 生产者
+  ** 消费者
+    *** 消费者位移
+  ** Broker
+  ** 备份机制
+  ** 分区
+  ** 消费者组
+  ** Coordinator：协调者
+  ** 重平衡
+  ** AR：分区中所有的副本
+    *** ISR：与leader完全同步
+  ** OSR：follower和leader没有同步
+@endmindmap
+

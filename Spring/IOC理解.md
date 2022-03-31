@@ -15,6 +15,8 @@ DI：依赖注入，把对应的属性注入到具体的对象中，例如@Autow
 3. BeanFactoryPostProcessor 的处理，进行扩展 BeanDefinition，例如处理占位符，placeHolderConfigSupport
 4. BeanPostProcessor 的注册功能，方便后续对 Bean 对象的具体扩展功能。
 5. 将 BeanDefinition 对象实例化成具体的 bean 对象。
-6. bean 对线的初始化过程（填充属性 populateBean，调用 aware 子类方法，调用 BeanpostProcessor 前置处理方法，调用 init-method 方法，调用 BeanProfessor 的后置处理方法）。
+6. bean 对象的初始化过程（填充属性 populateBean，调用 aware 子类方法，调用 BeanpostProcessor 前置处理方法，调用 init-method 方法，调用 BeanProfessor 的后置处理方法）。
 7. 生成完整的 bean 对象，通过 getBean 方法可以直接获取。
 8. 销毁
+
+

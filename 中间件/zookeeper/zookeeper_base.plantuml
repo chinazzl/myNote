@@ -29,7 +29,8 @@
 
 #### zookeeper原理
 
-zookeeper的核心是`原子广播`形式，
+zookeeper的核心是/color:Red`原子广播`形式，这个机制保证了各个Server之间的同步，实现这个机制的协议是zab协议，他么你分别是`恢复模式`和`广播模式`，当服务刚启动或者leader宕机的时候，zab就进入了恢复模式，当领导者被选举出来，
+并且大多数Server完成了和leader的状态同步之后，恢复模式就结束了，状态同步 保证leader和Server具有相同的系统状态。
 
 #### zookeeper是如何保持事务顺序一致性
 
@@ -65,4 +66,18 @@ note left: "创建一个临时有序节点"
 @enduml
 
 
+#### Zookeeper 下Server工作状态
+* LOOKING 当前Server不知道leader是谁，正在搜寻
+* LEADING 当前Server即为选举出来的leader
+* FOLLOWING leader已经选举出来，当前Server与之同步。
 
+#### zookeeper 是如何选举出来leader的
+（1） 选举线程由当前 Server 发起选举的线程担任，其主要功能是对投票结果进行统计，并选出推荐的Server；
+（2） 选举线程首先向所有 Server 发起一次询问(包括自己)；
+（3） 选举线程收到回复后，验证是否是自己发起的询问(验证 zxid 是否一致)，然后获取对方的 id(myid)，并存储到当前询问对象列表中，最后获取对方提议的 leader 相关信
+息(id,zxid)，并将这些信息存储到当次选举的投票记录表中；
+（4） 收到所有 Server 回复以后，就计算出 zxid 最大的那个 Server，并将这个 Server 相关信息设置成下一次要投票的 Server；
+（5） 线程将当前 zxid 最大的 Server 设置为当前 Server 要推荐的 Leader，如果此时获胜的 Server 获得 n/2 + 1 的 Server 票数，设置当前推荐的 leader 为获胜的 Server，
+将根据获胜的 Server 相关信息设置自己的状态，否则，继续这个过程，直到 leader 被选举出来。 通过流程分析我们可以得出：要使 Leader 获得多数Server 的支持，则 Server
+总数必须是奇数 2n+1，且存活的 Server 的数目不得少于 n+1. 每个 Server 启动后都会重复以上流程。在恢复模式下，如果是刚从崩溃状态恢复的或者刚启动的 server 还会从磁
+盘快照中恢复数据和会话信息，zk 会记录事务日志并定期进行快照，方便在恢复时进行状态恢复

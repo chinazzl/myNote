@@ -81,3 +81,39 @@ note left: "创建一个临时有序节点"
 将根据获胜的 Server 相关信息设置自己的状态，否则，继续这个过程，直到 leader 被选举出来。 通过流程分析我们可以得出：要使 Leader 获得多数Server 的支持，则 Server
 总数必须是奇数 2n+1，且存活的 Server 的数目不得少于 n+1. 每个 Server 启动后都会重复以上流程。在恢复模式下，如果是刚从崩溃状态恢复的或者刚启动的 server 还会从磁
 盘快照中恢复数据和会话信息，zk 会记录事务日志并定期进行快照，方便在恢复时进行状态恢复
+
+
+@startuml "Leader选举"
+left to right direction
+archimate #Technology "Server0" as s0 <<technology-device>>
+archimate #Technology "Server1" as s1 <<technology-device>>
+archimate #Technology "Server2" as s2 <<technology-device>>
+
+component leader {
+   card "thread" as t
+}
+s0  --> t 
+note right: "创建一个统计线程"
+s0 --> s1
+note right: "s0对 s1 进行询问，并且和s1交换数据"
+s0 --> s2 
+note right: "s0对 s1 进行询问，并且和s1,s2交换数据"
+
+legend left
+1. s0 创建一个统计线程，用于统计服务投票，此时的状态是LOOKING
+2. s0对s1进行询问，s1给自己投票，s0和s1交换数据。因为s1的编号最大，但是没有超过半数 ,s1 的状态还是LOOKING
+3. s0对s2进行询问，s2给自己投票，s0和s1交换数据。s2的编号最大，现在投票数正好超过半数，则s2的 状态是Leading
+4. 其他两个是Following
+end legend
+@enduml
+
+#### Zookeeper 如何保证主从同步
+
+Zookeeper 的核心是原子广播机制，这个机制保证了各个 server 之间的同步。 实现这个机制的协议叫做 Zab 协议。Zab 协议有两种模式，它们分别是恢复模 式和广播模式。
+恢复模式
+当服务启动或者在领导者崩溃后，Zab就进入了恢复模式，当领导者被选举出 来，且大多数 server 完成了和 leader 的状态同步以后，恢复模式就结束了。状 态同步保证了
+leader 和 server 具有相同的系统状态。
+广播模式
+一旦 leader 已经和多数的 follower 进行了状态同步后，它就可以开始广播消息 了，即进入广播状态。这时候当一个 server 加入 ZooKeeper 服务中，它会在 恢复模式下启动，
+发现 leader，并和 leader 进行状态同步。待到同步结束，它也参与消息广播。ZooKeeper 服务一直维持在 Broadcast 状态，直到 leader 崩溃了或者 leader 失去了大部分的
+followers 支持。

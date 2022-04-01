@@ -116,3 +116,4 @@ Rebalance 是 Kafka 消费者端实现高可用的重要手段。
 
 
 kafka的选举，如果有三个broker，并且分区为3，kafka会把三个分区均匀的分布在三个broker中，partition_topic_0的AR（所有的副本集合[1,2,0]）,根据优先副本原则会选举broker1为分区partition_topic_0的Leader。每一次在新增Consumer消费者或者恢复的时候都会进行Rebanlance，再次进行选举。
+

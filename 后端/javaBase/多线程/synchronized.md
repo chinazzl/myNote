@@ -1,0 +1,176 @@
+## Synchronized 同步锁
+
+ Synchronized关键字
+   1. Synchronized 关键字提供了一种锁机制，能够确保共享变量的互斥访问，从而防止数据不一致出现的问题
+
+   2. Synchronized 关键字包括monitor enter 和 monitor exit 两个JVM指令，它能够保证在任何时候任何线程执行到monitor　enter成功之前都必须从主内存中获取数据，而不是从缓存中，在monitor　exit运行成功之后，共享变量被更新后的值必须刷入主内存
+
+   3. Synchronized的指令严格遵守Java　happen－before　规则，一个monitor　exit 指令之前必定要有一个monitor enter
+      1. Monitor enter：每一个都与一个monitor相关联，一个monitor的lock 的锁只能被一个线程在同一时间获得，在一个线程尝试获得与对象关联 monitor 得所有权时 会发生如下几件事情
+         - 如果monitor 得计数器为0 则意味着该monitor 得lock还没有被获得，某个线程获得之后将立即对该计数器加一，从此该线程就是这个monitor 得所有者
+         - 如果一个已经拥有该monitor所有权得线程冲入，则会导致monitor计数器再次累加
+         - 如果monitor 已经被其他线程所拥有，则其他线程尝试获取该monitor得所有权时，会被陷入阻塞状态直到monitor计数器变为0，才能再次尝试获取对monitor得所有权
+
+   2.  Monitorexit
+       
+         - 释放对monitor 得所有权，想要释放对某个对象关联得monitor得所有权的前提是，你曾经获得了所有权，释放monitor所有权的过程较为简单，就是将monitor的计数器减一，如果计数器的结果为0，那就意味着该线程不在拥有对该monitor的所有权，通俗地讲就是解锁。与此同时被该monitor block 的线程将再次尝试获得对该monitor的所有权
+       
+   5. Synchronized 作用域
+
+      - 在静态方法加锁
+      - 在非静态方法上加锁
+      - 在代码块上加锁
+
+      | 作用范围   | 锁对象                                                       |
+      | :--------- | :----------------------------------------------------------- |
+      | 非静态方法 | 当前对象 => this                                             |
+      | 静态方法   | 类对象  => SynchronizedSample.class （一切皆对象，这个是类对象） |
+      | 代码块     | 指定对象 => lock （以上面的代码为例）                        |
+
+```java
+public class SynchronizedSample {
+
+    privatefinal Object lock = new Object();
+
+    privatestaticint money = 0;
+		//非静态方法
+    public synchronized void noStaticMethod(){
+        money++;
+    }
+		//静态方法
+    public static synchronized void staticMethod(){
+        money++;
+    }
+		
+    public void codeBlock(){
+      	//代码块
+        synchronized (lock){
+            money++;
+        }
+    }
+}
+```
+
+| 作用范围   | 锁对象                                                       |
+| :--------- | :----------------------------------------------------------- |
+| 非静态方法 | 当前对象 => this                                             |
+| 静态方法   | 类对象  => SynchronizedSample.class （一切皆对象，这个是类对象） |
+| 代码块     | 指定对象 => lock （以上面的代码为例）                        |
+
+
+
+### Synchronized原理
+
+![](D:\microServerPages\myNote\后端\assert\x86headerr.png)
+
+![ObjectMonitor](D:\microServerPages\myNote\后端\assert\ObjectMonitor.png)
+
+> 当多个线程同时访问某段同步代码时，首先会进入 _EntryList 集合，当线程获取到对象的 monitor 之后，就会进入 _Owner 区域，并把 ObjectMonitor 对象的 _Owner 指向为当前线程，并使 _count + 1，如果调用了释放锁（比如 wait）的操作，就会释放当前持有的 monitor ，owner = null， _count - 1，同时这个线程会进入到 _WaitSet 列表中等待被唤醒。如果当前线程执行完毕后也会释放 monitor 锁，只不过此时不会进入 _WaitSet 列表了，而是直接复位 _count 的值。
+
+1. 当有两个线程A、B同时访问一个共享资源的时候，发现方法加了synchronized锁，这时线程调度到A线程执行。拿到锁的步骤
+
+   1.1 将MonitorObject 中的_owner设置成A线程；
+
+   1.2 将markword 设置为Monitor对象地址，锁标志改为10
+
+   1.3 将B线程阻塞 放到Contention List队列
+
+2. JVM每次从waitingQueue的尾部取出一个线程 放到onDeck作为候选者，但是如果并发并比较高吗，WaitingQueue会被大量线程执行CAS操作，为了降低对尾部元素的竞争，将WaitingQueue拆分为ContetntionList和EntryList两个队列，JVM将一部分线程移到EntryList作为准备进OnDeck的预备线程。
+
+   - 所有请求锁的 线程首先被放在ContentionList这个竞争队列中
+   - ContentionList中那些有资格成为候选资源的线程被移植都EntryList中。
+   - 任意时刻，最多只有一个线程正在竞争锁资源，该线程被称为OnDeck
+   - 当前已经获取到锁资源的线程被称为Owner
+   - 处于ContentionList、EntryList、WaitSet中的线程都处于阻塞状态，该阻塞是由操作系统来完成的。
+
+3. 作为Owner的A线程执行中，可能调用wait释放锁这个时候A线程进入WaitSet，等待被唤醒。
+
+### Synchronized锁的升级
+
+#### 无锁状态
+
+**无锁状态**，无锁即没有对资源进行锁定，所有的线程都可以对同一个资源进行访问，但是只有一个线程能够成功修改资源。
+
+
+
+| 无状态 | 标记对象的hashcode | 分代年龄 | 0    | 01   |
+| ------ | ------------------ | -------- | ---- | ---- |
+
+#### 偏向锁
+
+HotSpot 的作者经过研究发现，大多数情况下，锁不仅不存在多线程竞争，还存在锁由同一线程多次获得的情况，偏向锁就是在这种情况下出现的，它的出现是为了解决只有在一个线程执行同步时提高性能。
+
+
+
+| 偏向锁 | 线程ID | epoch | 分代年龄 | 1    | 01   |
+| ------ | ------ | ----- | -------- | ---- | ---- |
+
+
+
+**偏向锁获取过程**
+
+1. 首先线程访问同步代码块，会通过检查对象头 Mark Word 的锁标志位判断目前锁的状态，如果是 01，说明就是无锁或者偏向锁，然后再根据是否偏向锁 的标示判断是无锁还是偏向锁，如果是无锁情况下，执行下一步；
+2. 线程使用 CAS 操作来尝试对对象加锁，如果使用 CAS 替换 ThreadID 成功，就说明是第一次上锁，那么当前线程就会获得对象的偏向锁，此时会在对象头的 Mark Word 中记录当前线程 ID 和获取锁的时间 epoch 等信息，然后执行同步代码块。
+
+`全局安全点（Safe Point）：全局安全点的理解会涉及到 C 语言底层的一些知识，这里简单理解 SafePoint 是 Java 代码中的一个线程可能暂停执行的位置。`
+
+等到下一次线程在进入和退出同步代码块时就不需要进行 CAS 操作进行加锁和解锁，只需要简单判断一下对象头的 Mark Word 中是否存储着指向当前线程的线程ID，判断的标志当然是根据锁的标志位来判断的。流程查看
+
+[]: synchronized原理.drawio	"synchronized原理"
+
+**关闭偏向锁**
+
+偏向锁在 Java 6 和 Java 7 里是默认启用的。由于偏向锁是为了在只有一个线程执行同步块时提高性能，如果你确定应用程序里所有的锁通常情况下处于竞争状态，可以通过JVM参数关闭偏向锁：-XX:-UseBiasedLocking=false，那么程序默认会进入轻量级锁状态。
+
+**关于 epoch**
+
+偏向锁的对象头中有一个被称为 epoch 的值，它作为偏差有效性的时间戳。
+
+#### 轻量级锁
+
+轻量级锁是指当前锁是偏向锁的时候，资源被另外的线程所访问，那么偏向锁就会升级为轻量级锁，其他线程会通过自旋的形式尝试获取锁，不会阻塞，从而提高性能，下面是详细的获取过程。
+
+**轻量级锁加锁过程**
+
+1. 紧接着上一步，如果 CAS 操作替换 ThreadID 没有获取成功，执行下一步；
+2. 如果使用 CAS 操作替换 ThreadID 失败（这时候就切换到另外一个线程的角度）说明该资源已被同步访问过，这时候就会执行锁的撤销操作，撤销偏向锁，然后等原持有偏向锁的线程到达全局安全点（SafePoint）时，会暂停原持有偏向锁的线程，然后会检查原持有偏向锁的状态，如果已经退出同步，就会唤醒持有偏向锁的线程，执行下一步；
+3. 检查对象头中的 Mark Word 记录的是否是当前线程 ID，如果是，执行同步代码，如果不是，执行偏向锁获取流程 的第 2 步。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

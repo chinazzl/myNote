@@ -140,3 +140,101 @@ kafka的选举，如果有三个broker，并且分区为3，kafka会把三个分
 **「Broker」**：Kafka服务节点，一个或多个Broker组成了一个Kafka集群
 
 **「Zookeeper集群」**：负责管理kafka集群元数据以及控制器选举等。
+
+#### 重平衡
+
+**「（重平衡）Rebalance 本质上是一种协议，规定了一个 Consumer Group 下的所有 Consumer 如何达成一致，来分配订阅 Topic 的每个分区」**。
+
+比如某个 Group 下有 20 个 Consumer 实例，它订阅了一个具有 100 个分区的 Topic。
+
+正常情况下，Kafka 平均会为每个 Consumer 分配 5 个分区。这个分配的过程就叫 Rebalance。
+
+**「Rebalance 的触发条件有 3 个。」**
+
+1. 组成员数发生变更。比如有新的 Consumer 实例加入组或者离开组，或是有 Consumer 实例崩溃被踢出组。
+2. 订阅主题数发生变更。Consumer Group 可以使用正则表达式的方式订阅主题，比如`consumer.subscribe(Pattern.compile(“t.*c”))`就表明该 Group 订阅所有以字母 t 开头、字母 c 结尾的主题，在 Consumer Group 的运行过程中，你新创建了一个满足这样条件的主题，那么该 Group 就会发生 Rebalance。
+3. 订阅主题的分区数发生变更。Kafka 当前只能允许增加一个主题的分区数，当分区数增加时，就会触发订阅该主题的所有 Group 开启 Rebalance。
+
+**「Coordinator 会在什么情况下认为某个 Consumer 实例已挂从而要退组呢？」**
+
+当 Consumer Group 完成 Rebalance 之后，每个 Consumer 实例都会定期地向 Coordinator 发送心跳请求，表明它还存活着。
+
+如果某个 Consumer 实例不能及时地发送这些心跳请求，Coordinator 就会认为该 Consumer 已经死了，从而将其从 Group 中移除，然后开启新一轮 Rebalance。
+
+Consumer 端有个参数，叫`session.timeout.ms`。
+
+该参数的默认值是 10 秒，即如果 Coordinator 在 10 秒之内没有收到 Group 下某 Consumer 实例的心跳，它就会认为这个 Consumer 实例已经挂了。
+
+除了这个参数，Consumer 还提供了一个允许你控制发送心跳请求频率的参数，就是`heartbeat.interval.ms`。
+
+这个值设置得越小，Consumer 实例发送心跳请求的频率就越高。
+
+频繁地发送心跳请求会额外消耗带宽资源，但好处是能够更加快速地知晓当前是否开启 Rebalance，因为，目前 Coordinator 通知各个 Consumer 实例开启 Rebalance 的方法，就是将`REBALANCE_NEEDED`标志封装进心跳请求的响应体中。
+
+除了以上两个参数，Consumer 端还有一个参数，用于控制 Consumer 实际消费能力对 Rebalance 的影响，即`max.poll.interval.ms`参数。
+
+它限定了 Consumer 端应用程序两次调用 poll 方法的最大时间间隔。
+
+它的默认值是 5 分钟，表示你的 Consumer 程序如果在 5 分钟之内无法消费完 poll 方法返回的消息，那么 Consumer 会主动发起离开组的请求，Coordinator 也会开启新一轮 Rebalance。
+
+**「可避免 Rebalance 的配置」**
+
+第一类 Rebalance 是因为未能及时发送心跳，导致 Consumer 被踢出 Group 而引发的
+
+因此可以设置**「session.timeout.ms 和 heartbeat.interval.ms」**的值。
+
+- 设置`session.timeout.ms` = 6s。
+- 设置`heartbeat.interval.ms` = 2s。
+- 要保证 Consumer 实例在被判定为 dead 之前，能够发送至少 3 轮的心跳请求，即`session.timeout.ms >= 3 * heartbeat.interval.ms`。
+
+将`session.timeout.ms`设置成 6s 主要是为了让 Coordinator 能够更快地定位已经挂掉的 Consumer。
+
+**「第二类 Rebalance 是 Consumer 消费时间过长导致的」**。
+
+你要为你的业务处理逻辑留下充足的时间，这样 Consumer 就不会因为处理这些消息的时间太长而引发 Rebalance 了。
+
+#### 事务
+
+# 事务
+
+Kafka 自 0.11 版本开始也提供了对事务的支持，目前主要是在 read committed 隔离级别上做事情。
+
+它能保证多条消息原子性地写入到目标分区，同时也能保证 Consumer 只能看到事务成功提交的消息。
+
+**「事务型 Producer」**
+
+事务型 Producer 能够保证将消息原子性地写入到多个分区中。
+
+这批消息要么全部写入成功，要么全部失败，另外，事务型 Producer 也不惧进程的重启。
+
+Producer 重启回来后，Kafka 依然保证它们发送消息的精确一次处理。
+
+设置事务型 Producer 的方法也很简单，满足两个要求即可：
+
+- 和幂等性 Producer 一样，开启`enable.idempotence = true`。
+- 设置 Producer 端参数`transactional. id`，最好为其设置一个有意义的名字。
+
+此外，你还需要在 Producer 代码中做一些调整，如这段代码所示：
+
+```java
+producer.initTransactions();
+try {
+            producer.beginTransaction();
+            producer.send(record1);
+            producer.send(record2);
+            producer.commitTransaction();
+} catch (KafkaException e) {
+            producer.abortTransaction();
+}
+```
+
+和普通 Producer 代码相比，事务型 Producer 的显著特点是调用了一些事务 API，如 initTransaction、beginTransaction、commitTransaction 和 abortTransaction，它们分别对应事务的初始化、事务开始、事务提交以及事务终止。
+
+这段代码能够保证 Record1 和 Record2 被当作一个事务统一提交到 Kafka，要么它们全部提交成功，要么全部写入失败。
+
+实际上即使写入失败，Kafka 也会把它们写入到底层的日志中，也就是说 Consumer 还是会看到这些消息。
+
+有一个`isolation.level`参数，这个参数有两个取值：
+
+1. `read_uncommitted`：这是默认值，表明 Consumer 能够读取到 Kafka 写入的任何消息，不论事务型 Producer 提交事务还是终止事务，其写入的消息都可以读取，如果你用了事务型 Producer，那么对应的 Consumer 就不要使用这个值。
+2. `read_committed`：表明 Consumer 只会读取事务型 Producer 成功提交事务写入的消息，它也能看到非事务型 Producer 写入的所有消息。

@@ -1,7 +1,7 @@
 # 1. 先启动zookeeper
 ./zookeeper-server-start.sh /config/zookeeper.properties
 
-# 2. 启动kafkaa
+# 2. 启动kafka
 ./kafka-server-start.sh /config/server.properties
 
 # 3. 创建kafka主题

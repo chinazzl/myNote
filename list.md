@@ -17,6 +17,7 @@ GC、
     zookeeper: 
 redis和mysql同步：
     mysql主从同步：master -> 写数据 -> 写入binglog -> slave开启一个I/O线程读取binglog -> 存入relaylog -> slave执行relaylog的语句进行同步
+    
     redis同步： slave -> 向master发送psync指令请求同步,master响应FullSync(全同步)，并带上主库的runId和offset -> master执行bgsave命令，生成RDB文件，
                发送给slave库，slave执行RDB文件，主库将同步过程中新来的数据会写到 `replication buffer`中 -> 主库完成RDB发送后，会把`replication buffer`中的修改操作发给从库，从库再重新执行这些操作。这样主从库就实现同步啦
 分布式事务: CAP(一致性、可用性、分区容忍性) 

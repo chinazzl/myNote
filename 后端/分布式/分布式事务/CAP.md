@@ -1,5 +1,3 @@
-## 
-
 ## CAP分布式事务
 
 > CAP是Consistency、Available、Partition tolerance 分别表示一致性、可用性、分区容忍性。 

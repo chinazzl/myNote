@@ -1,4 +1,5 @@
 ## Kafka
+
 > Kafka 是一种分布式的，基于发布 / 订阅的消息系统
 
 **「主题」**
@@ -113,7 +114,6 @@ Rebalance 是 Kafka 消费者端实现高可用的重要手段。
 上图中 offset 为 9 的位置即为当前日志文件的 LEO，LEO 的大小相当于当前日志分区中最后一条消息的 offset 值加 1
 
 分区 ISR 集合中的每个副本都会维护自身的 LEO ，而 ISR 集合中最小的 LEO 即为分区的 HW，对消费者而言只能消费 HW 之前的消息。
-
 
 kafka的选举，如果有三个broker，并且分区为3，kafka会把三个分区均匀的分布在三个broker中，partition_topic_0的AR（所有的副本集合[1,2,0]）,根据优先副本原则会选举broker1为分区partition_topic_0的Leader。每一次在新增Consumer消费者或者恢复的时候都会进行Rebanlance，再次进行选举。
 

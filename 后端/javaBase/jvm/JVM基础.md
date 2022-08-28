@@ -33,12 +33,12 @@
 2. 年代晋升失败，比如eden区存活对象晋升到S区放不下，又尝试直接晋升Old区又放不下，就会触发FullGC
 3. CMS的Concurrent-Mode-Failure 由于CMS回收过程中主要分为四步：
 
-​	1.CMS initial mark
-​	2.CMS Concurrent mark
-​	3.CMS remark
-​	4.CMS Concurrent sweep。在2中gc线程与用户线程同时执行，那么用户线程依旧可 能同时产生垃圾， 
-​	如果这个垃圾较多无法放入预留的空间就会产生CMS-Mode-Failure， 切换 为SerialOld单线程做mark- 
-​	sweep-compact。
+​    1.CMS initial mark
+​    2.CMS Concurrent mark
+​    3.CMS remark
+​    4.CMS Concurrent sweep。在2中gc线程与用户线程同时执行，那么用户线程依旧可 能同时产生垃圾， 
+​    如果这个垃圾较多无法放入预留的空间就会产生CMS-Mode-Failure， 切换 为SerialOld单线程做mark- 
+​    sweep-compact。
 
 4. 新生代晋升的平均大小大于老年代的剩余空间（为了避免新生代晋升老年代失败）当使用G1，CMS时，Full GC发生的时候是Serial + SerialOld。当使用ParaOld时，FullGC发生的时候是ParallNew+SerialOld.
 
@@ -59,29 +59,34 @@
 #### JVM有哪些回收器
 
 - Serial收集器（复制算法）：新生代单线程收集器，标记和清理都是单线程，简单高效
-- ParNew收集器（复制算法）：新生代并行收集器，实际上是Serial收集器的多线程版本，在多核CPU环境下有着比Serial更好的表现。
-- Parallel Scavenge（复制算法）：新生代并行收集器，追求吞吐量，高效利用CPU时间，尽快完成程序的运算任务，适合后台应用等对交互响应要求不高的场景。
-- SerialOld收集器（标记-整理算法）：老年代单线程收集器，Serial收集器老年代版本
-- ParallelOld收集器：老年代并行收集器，吞吐量优先，Parallel Scavenge收集器的老年代版本
-- CMS（Concurrent Mark Sweep）收集器（标记-清除算法）：老年代并行收集器，以获取最短回收停顿时间为目标的收集器具有高并发、低停顿的特点，追求最短GC回收停顿时间。
 
- **CMS 是英文 Concurrent Mark-Sweep 的简称，是以牺牲吞吐量为代价来获得  最短回收停顿时间的垃圾 回收器。对于要求服务器响应速度的应用上，这种垃圾  回收器非常适合。在启动 JVM 的参数加上“-** 
-**XX:+UseConcMarkSweepGC”来指定使用 CMS 垃圾回收器。 CMS 使用的是标记-清除的算法实现的，** 
-**所以在 gc的时候回产生大量的内存碎  片，当剩余内存不能满足程序运行要求时，系统将会出现** 
-**Concurrent Mode Failure，临时 CMS 会采用 Serial Old 回收器进行垃圾清除，此时的性能将会  被降** 
-**低。**
+- ParNew收集器（复制算法）：新生代并行收集器，实际上是Serial收集器的多线程版本，在多核CPU环境下有着比Serial更好的表现。
+
+- Parallel Scavenge（复制算法）：新生代并行收集器，追求吞吐量，高效利用CPU时间，尽快完成程序的运算任务，适合后台应用等对交互响应要求不高的场景。
+
+- SerialOld收集器（标记-整理算法）：老年代单线程收集器，Serial收集器老年代版本
+
+- ParallelOld收集器：老年代并行收集器，吞吐量优先，Parallel Scavenge收集器的老年代版本
+
+- CMS（Concurrent Mark Sweep）收集器（标记-清除算法）：老年代并行收集器，以获取最短回收停顿时间为目标的收集器具有高并发、低停顿的特点，追求最短GC回收停顿时间。
+  
+  **CMS 是英文 Concurrent Mark-Sweep 的简称，是以牺牲吞吐量为代价来获得  最短回收停顿时间的垃圾 回收器。对于要求服务器响应速度的应用上，这种垃圾  回收器非常适合。在启动 JVM 的参数加上“-** 
+  **XX:+UseConcMarkSweepGC”来指定使用 CMS 垃圾回收器。 CMS 使用的是标记-清除的算法实现的，** 
+  **所以在 gc的时候回产生大量的内存碎  片，当剩余内存不能满足程序运行要求时，系统将会出现** 
+  **Concurrent Mode Failure，临时 CMS 会采用 Serial Old 回收器进行垃圾清除，此时的性能将会  被降** 
+  **低。**
 
 - G1（Garbage First）收集器（标记-整理算法）：Java堆并行收集器，不会产生内存碎片，G1回收的是整个Java堆（包括新生代和老年代），而前六种收集器回收的范围 仅限于新生代和老年代。
 
 #### 分代回收器是如何工作的
 
 > 分代回收器有两个分区：老年代和新生代，新生代默认的空间占比总空间的1/3，老年代的默认占比是2/3;
->
+> 
 > 年轻代（New）：年轻代用来存放JVM刚分配的Java对象
 > 年老代（Tenured)：年轻代中经过垃圾回收没有回收掉的对象将被Copy到年老代
 > 永久代（Perm）：永久代存放Class、Method元信息，其大小跟项目的规模、类、方法的量有 
 > 关，一般设置为128M就足够，设置原则是预留30%的空间。
->
+> 
 > 新生代使用的是复制算法，新生代里有三个分区：Eden、To  Survivor、From Survivor，他们的默认占比是8：1：1
 
 - 把Eden和From Survivor活着的对象复制到 To Survivor
@@ -125,3 +130,19 @@ Major GC 的速度通常会比 Minor GC 慢 10 倍以上。
 - -XX:+UseConcMarkSweepGC：指定使用 CMS + Serial Old 垃圾回收器组  合； 
 - -XX:+PrintGC：开启打印 gc 信息；
 - -XX:+PrintGCDetails：打印 gc 详细信息。
+
+#### JVM调优
+
+1. 多数的Java应用不需要在服务器上进行GC优化
+
+2. 多数导致GC问题的Java应用，都不是因为我们参数设置错误，而是代码问题
+
+3. 在应用上线之前，先考虑将机器的JVM参数设置到最优
+
+4. 减少创建对象的数量
+
+5. 减少使用全局变量和大对象
+
+6. GC优化是到最后不得已才采用的手段
+
+7. 在实际使用中，分析GC情况优化代码比优化GC参数要多得多。

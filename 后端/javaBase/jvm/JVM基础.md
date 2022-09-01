@@ -25,7 +25,10 @@
 - 当老年代满时会引发Full GC ，Full GC将会同时回收年轻代、老年代
 - 当永久代满时也会引发Full GC，会导致Class、Method元信息卸载。
 
-**何时会抛出OutOfMemoryException，这将会留给系统一个微小的间隙以做一些Down之前的操作 ，比如手动打印Heap Dump**
+**何时会抛出OutOfMemoryException，并不是内存被耗空的时候才抛出**
+
+1. JVM98%的时间都花费在内存的回收
+2. 每次回收的内存小于2%
 
 #### FullGC触发场景
 
@@ -119,6 +122,7 @@ Major GC 的速度通常会比 Minor GC 慢 10 倍以上。
 
 - -Xms2g：初始化推大小为 2g； 
 - -Xmx2g：堆最大内存为 2g；
+- -XX:newSize；-XX:MaxNewSize设置绝对大小
 - -XX:NewRatio=4：设置年轻的和老年代的内存比例为 1:4； 
 - -XX:SurvivorRatio=8：设置新生代 Eden 和 Survivor 比例为 8:2； 
 - –XX:+UseParNewGC：指定使用 ParNew + Serial Old 垃圾回收器 组合； 

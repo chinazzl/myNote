@@ -73,11 +73,7 @@
 
 - CMS（Concurrent Mark Sweep）收集器（标记-清除算法）：老年代并行收集器，以获取最短回收停顿时间为目标的收集器具有高并发、低停顿的特点，追求最短GC回收停顿时间。
   
-  **CMS 是英文 Concurrent Mark-Sweep 的简称，是以牺牲吞吐量为代价来获得  最短回收停顿时间的垃圾 回收器。对于要求服务器响应速度的应用上，这种垃圾  回收器非常适合。在启动 JVM 的参数加上“-** 
-  **XX:+UseConcMarkSweepGC”来指定使用 CMS 垃圾回收器。 CMS 使用的是标记-清除的算法实现的，** 
-  **所以在 gc的时候回产生大量的内存碎  片，当剩余内存不能满足程序运行要求时，系统将会出现** 
-  **Concurrent Mode Failure，临时 CMS 会采用 Serial Old 回收器进行垃圾清除，此时的性能将会  被降** 
-  **低。**
+  **CMS 是英文 Concurrent Mark-Sweep 的简称，是以牺牲吞吐量为代价来获得  最短回收停顿时间的垃圾回收器。对于要求服务器响应速度的应用上，这种垃圾回收器非常适合。在启动 JVM 的参数加上“-XX:+UseConcMarkSweepGC”来指定使用 CMS 垃圾回收器。 CMS 使用的是标记-清除的算法实现的，所以在 gc的时候回产生大量的内存碎片，当剩余内存不能满足程序运行要求时，系统将会出现Concurrent Mode Failure，临时 CMS 会采用 Serial Old 回收器进行垃圾清除，此时的性能将会被降低。**
 
 - G1（Garbage First）收集器（标记-整理算法）：Java堆并行收集器，不会产生内存碎片，G1回收的是整个Java堆（包括新生代和老年代），而前六种收集器回收的范围 仅限于新生代和老年代。
 
@@ -131,7 +127,7 @@ Major GC 的速度通常会比 Minor GC 慢 10 倍以上。
 - -XX:SurvivorRatio=8：设置新生代 Eden 和 Survivor 比例为 8:2； 
 - –XX:+UseParNewGC：指定使用 ParNew + Serial Old 垃圾回收器 组合； 
 - -XX:+UseParallelOldGC：指定使用 ParNew + ParNew Old 垃圾回收器组合；
-- -XX:+UseConcMarkSweepGC：指定使用 CMS + Serial Old 垃圾回收器组  合； 
+- -XX:+UseConcMarkSweepGC：指定使用 CMS + Serial Old 垃圾回收器组合； 
 - -XX:+PrintGC：开启打印 gc 信息；
 - -XX:+PrintGCDetails：打印 gc 详细信息。
 

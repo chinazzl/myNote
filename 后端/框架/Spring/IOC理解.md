@@ -6,7 +6,7 @@
 
 DI：依赖注入，把对应的属性注入到具体的对象中，例如@Autowire、populateBean 完成属性值注入
 
-容器：存储对象，使用 map 结****构进行存储，在 spring 中一般存在三级缓存，singletonObject 存放完整的 bean 对象。整个 bean 的生命周期从创建到销毁的过程全部由容器来管理。
+容器：存储对象，使用 map 结构进行存储，在 spring 中一般存在三级缓存，singletonObject 存放完整的 bean 对象。整个 bean 的生命周期从创建到销毁的过程全部由容器来管理。
 
 分：
 

@@ -22,5 +22,5 @@ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic topicNam
 ./bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --describe --topic first
 # 5.4 往topic 为 first 的内部生产消息
 ./bin/kafka-console-producer.sh --broker-list hadoop102:9092 --topic first
-从topic 为first的内部消费消息
+#从topic 为first的内部消费消息
 ./bin/kafka-console-consumer.sh --bootstrap-server hadoop102:9092 --topic first

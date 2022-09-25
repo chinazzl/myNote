@@ -33,3 +33,53 @@ curl -X POST "http://49.4.114.32:8848/nacos/v1/cs/configs?dataId=nacos.cfg.dataI
 ```url
 curl -X GET "http://49.4.114.32:8848/nacos/v1/cs/configs?dataId=nacos.cfg.dataId&group=test
 ```
+
+### 服务发现与动态u管理配置文件
+
+1. 读取配置文件的优先级：
+   如下图：
+   a: alicloud-web.yml
+   b: web-ext-config-0.yml web-ext-config-0.yml
+   c: shared-config.yml
+   优先级低 -> 高 a < b < c， 公共配置文件的优先级高于扩展配置优先级，扩展配置优先级高于自定义优先级。
+2. 让本地配置覆盖nacos配置文件，如下面配置文件，需要在alicloud-web.yml中增加
+   ```yaml
+   spring：
+     cloud:
+     # nacos不覆盖本地文件
+       override-none: true
+       # 允许覆盖nacos配置文件
+       allow-override: true
+       # 允许覆盖系统配置文件
+       override-system-properties: false
+   ```
+
+Nacos配置文件示例：
+```yaml
+# bootstrap.yml
+spring:
+  application:
+    name: alicloud-web
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      discovery:
+        namespace: 5bf3d99b-35dc-4eea-917d-10ee3fa4e030
+      #        username: nacos
+      #        password: nacos
+      config:
+        namespace: 5bf3d99b-35dc-4eea-917d-10ee3fa4e030
+        group: ZZL_GROUP
+        file-extension: yml
+        extension-configs:
+          extension-config[0]: web-ext-config-0.yml
+          extension-config[1]:
+            dataId: web-ext-config-1.yml
+            group: ZZL_GROUP
+         share_config: shared-config.yml
+    sentinel:
+      web-context-unify: true
+      transport:
+        dashboard: localhost:8858
+
+```

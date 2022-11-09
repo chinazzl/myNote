@@ -8,7 +8,7 @@
 
 3. 具有容错性：只要大部分的Redis节点正常运行，客户端就可以加锁和解锁
 
-4. 解铃还须系铃人：枷锁和解锁必须是同一个客户端，客户端自己不能把别人的加的锁给解了。
+4. 解铃还须系铃人：加锁和解锁必须是同一个客户端，客户端自己不能把别人的加的锁给解了。
 
 ```java
 public static boolean wrongGetLock2(Jedis jedis, String lockKey, int expireTime) { 

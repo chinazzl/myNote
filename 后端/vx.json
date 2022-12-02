@@ -5,6 +5,24 @@
     "folders": [
         {
             "name": "缓存"
+        },
+        {
+            "name": "分布式"
+        },
+        {
+            "name": "框架"
+        },
+        {
+            "name": "中间件"
+        },
+        {
+            "name": "Mysql"
+        },
+        {
+            "name": "javaBase"
+        },
+        {
+            "name": "assert"
         }
     ],
     "id": "319",

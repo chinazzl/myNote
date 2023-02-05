@@ -1,16 +1,15 @@
-## zookeeper
-
+# zookeeper
 > ZooKeeper 是一个开源的分布式协调服务。它是一个为分布式应用提供一致性 服务的软件，分布式应用程序可以基于 Zookeeper 实现诸如数据发布/订阅、 负载均衡、命名服
 > 务、分布式协调/通知、集群管理、Master 选举、分布式锁和 分布式队列等功能。  
 
-#### 分布式锁
+## 分布式锁
 
 1. 先创建一个临时有序节点znode
 2. 客户端扫描 捕获所有的节点，如果发现自己创建的节点顺序最小，则相当于获取了锁，当锁使用结束后，会将节点进行删除
 3. 如果发现创建的节点不是最小，则表示没有获取到锁，客户端会找到比自己小的节点并且加入到watcher中进行监听，如果监听到比自己小的被删除则会收到通知，
 此时再次判断自己创建的是否是最小的，如果不是则继续监听
 
-#### 四种类型znode
+### 四种类型znode
 
 1. PERSISTENT 持久化节点
 
@@ -27,7 +26,7 @@
 4. EPHEMRAL_SEQUENTIAL  临时顺序节点
 
    基本特性同临时节点，增加了顺序属性，节点名后边会追加一个由父节点维护的 自增整型数字  
-
+   
 #### zookeeper原理
 
 zookeeper的核心是/color:Red`原子广播`形式，这个机制保证了各个Server之间的同步，实现这个机制的协议是zab协议，他么你分别是`恢复模式`和`广播模式`，当服务刚启动或者leader宕机的时候，zab就进入了恢复模式，当领导者被选举出来，
@@ -50,6 +49,7 @@ epoch（ 时期; 纪元; 世; 新时代）用来标识 leader 周期，如果有
 7. 分布式锁
 8. 分布式队列数据发布/订阅
 
+```plantuml
 @startuml "zokeeper lock"
 left to right direction
 actor c
@@ -65,7 +65,7 @@ note left: "创建一个临时有序节点"
 lock --> templock2
 note left: "创建一个临时有序节点"
 @enduml
-
+```
 
 #### Zookeeper 下Server工作状态
 * LOOKING 当前Server不知道leader是谁，正在搜寻
@@ -83,7 +83,7 @@ note left: "创建一个临时有序节点"
 总数必须是奇数 2n+1，且存活的 Server 的数目不得少于 n+1. 每个 Server 启动后都会重复以上流程。在恢复模式下，如果是刚从崩溃状态恢复的或者刚启动的 server 还会从磁
 盘快照中恢复数据和会话信息，zk 会记录事务日志并定期进行快照，方便在恢复时进行状态恢复
 
-
+```plantuml
 @startuml "Leader选举"
 left to right direction
 archimate #Technology "Server0" as s0 <<technology-device>>
@@ -107,6 +107,7 @@ legend left
 4. 其他两个是Following
 end legend
 @enduml
+```
 
 #### Zookeeper 如何保证主从同步
 

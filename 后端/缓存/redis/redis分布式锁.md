@@ -18,7 +18,7 @@ public static boolean wrongGetLock2(Jedis jedis, String lockKey, int expireTime)
          // 如果当前锁不存在，返回加锁成功
    if (jedis.setnx(lockKey, expiresStr) == 1) { 
        return true;
- 	}
+     }
    // 如果锁存在，获取锁的过期时间
    String currentValueStr = jedis.get(lockKey);
    if (currentValueStr != null && Long.parseLong(currentValueStr) < System.currentTimeMillis()) { 
@@ -79,4 +79,3 @@ public class RedisTool {
  }
 }
 ```
-

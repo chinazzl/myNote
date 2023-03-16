@@ -11,11 +11,11 @@
     # shell
     start elasticsearch\bin\elasticsearch.bat
 #Linux
-	#命令行
+    #命令行
     cd elasticsearch/bin
     ./elasticsearch -d
 # Mac Os
-	 #命令行
+     #命令行
     cd elasticsearch/bin
     ./elasticsearch -d
    #图形界面 在bin目录下双击elasticsearch
@@ -24,6 +24,7 @@
 ```
 
 ### 在单个项目启动多个节点
+
 ```shell
 #Linux/MACOS
 ./elasticsearch -E path.data=data1 -E path.logs=log1 -E node.name=node1 -E cluster.name=own-learn
@@ -94,9 +95,9 @@ GET /index/_mapping
 ```
 
 1. #### Es数据类型
-
+   
    1. 常见类型
-
+      
       1. 数字类型：long integer byte double float half_float scaled_float unsigned_long
       2. keywords：
          * keyword：适用于索引结构化的字段，可以用于过滤、排序、聚合、keywords类型的字段只能通过精确值（exact value）搜索到，id应该用keyword
@@ -108,28 +109,28 @@ GET /index/_mapping
       5. binary：二进制
       6. range（区间类型）：integer_range float_range long_range double_range date_range
       7. text：当一个字段是要被全文搜索的、比如Email内容、产品描述，这些字段应该使用text类型，设置text类型以后，字段内容会被分析，在生成倒排索引以前，字符串会被分析器分析称一个一个词项，text类型的字段不用于排序，被少用于聚合（解释一下为啥不会为text创建正排索引：大量堆空间，尤其是在加载高基数text字段时，字段数据一旦加载到堆中，就在该字段的生命周期内保持在哪里，同样，加载字段数据试一个昂贵的过程，可能导致用户遇到延迟问题，这就是默认情况下禁用字段数据的原因）
-
+   
    2. 对象关系类型
-
+      
       1. object：用于单个json对象
       2. nested：用于json对象数组
       3. flattened：允许将整个JSON对象索引为单个字段
-
+   
    3. 结构化类型
-
+      
       1. geo_point：纬度/经度积分
       2. geo_shape：用于多边形等复杂形状
       3. point：笛卡尔坐标点
       4. shape：笛卡尔任意几何图形
-
+   
    4. 特殊类型：
-
+      
       1. IP地址：ip用于IPv4和IPv6地址
-
+   
    5. 两种映射类型
-
+      
       - Dynamic field mapping：
-
+        
         - 整数 => long
         - 浮点数 => float
         - true | false => boolean
@@ -137,24 +138,24 @@ GET /index/_mapping
         - 数组 => 取决于数组中第一个有效值
         - 对象 => object
         - 字符串 => 如果不是数字和日期类型，那会被映射为text和keyword 两个类型
-
+      
       - Explicit field mapping：手动映射
-
+        
         ```http
         PUT /product 
         {
-        	"mappings": {
-        		"properties": {
-        			"field": {
-        				"mapping_parameters": "parameters value"
-        			}
-        		}
-        	}
+            "mappings": {
+                "properties": {
+                    "field": {
+                        "mapping_parameters": "parameters value"
+                    }
+                }
+            }
         }
         ```
-
+   
    6. 映射参数
-
+      
       1. index：是否对创建对当前字段创建倒排索引，默认true，如果不创建索引，该字段不会通过索引被搜索到，但仍然会在source元数据中展示
       2. analyzer：指定分析器（character filter、token filters）
       3. boost：对当前字段相关度的评分权重，默认1
@@ -167,16 +168,16 @@ GET /index/_mapping
          - strict 如果检测到新字段 则会引发异常并拒绝文档，必须将新字段显式添加到映射中
       8. eager_global_ordinals：英语聚合的字段上，优化聚合性能。
       9. enable：是否创建倒排索引，可以对字段操作，也可以对索引操作，如果不创建索引，当然可以检索并在_source元数据中展示（**谨慎使用，该状态无法修改**）
-
+      
       ```http
       PUT my_index
       {
-      	"mappings":{
-      		"enabled":false
-      	}
+          "mappings":{
+              "enabled":false
+          }
       }
       ```
-
+      
       10. fielddata：查询时内存数据结构，在首次用当前字段聚合、排序或者宅脚本使用时，需要字段为fielddata数据结构，并且创建倒排索引保存到堆中
       11. fields：给field创建多字段，用于不同目的（全文检索或者聚合分析排序）
       12. format：格式化

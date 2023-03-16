@@ -1,6 +1,7 @@
+## 启动Kibana
 
-## 启动Kibana 
 #### windows
+
 ```shell
     ##### 命令行
  cd kibana\bin

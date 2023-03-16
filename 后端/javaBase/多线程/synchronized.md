@@ -61,9 +61,9 @@ public class SynchronizedSample {
 
 ### Synchronized原理
 
-![](D:\microServerPages\myNote\后端\assert\x86headerr.png)
+![](\myNote\后端\assert\x86headerr.png)
 
-![ObjectMonitor](D:\microServerPages\myNote\后端\assert\ObjectMonitor.png)
+![ObjectMonitor](\myNote\后端\assert\ObjectMonitor.png)
 
 > 当多个线程同时访问某段同步代码时，首先会进入 _EntryList 集合，当线程获取到对象的 monitor 之后，就会进入 _Owner 区域，并把 ObjectMonitor 对象的 _Owner 指向为当前线程，并使 _count + 1，如果调用了释放锁（比如 wait）的操作，就会释放当前持有的 monitor ，owner = null， _count - 1，同时这个线程会进入到 _WaitSet 列表中等待被唤醒。如果当前线程执行完毕后也会释放 monitor 锁，只不过此时不会进入 _WaitSet 列表了，而是直接复位 _count 的值。
 

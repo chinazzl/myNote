@@ -42,7 +42,9 @@ curl -X GET "http://49.4.114.32:8848/nacos/v1/cs/configs?dataId=nacos.cfg.dataId
    b: web-ext-config-0.yml web-ext-config-0.yml
    c: shared-config.yml
    优先级低 -> 高 a < b < c， 公共配置文件的优先级高于扩展配置优先级，扩展配置优先级高于自定义优先级。
+
 2. 让本地配置覆盖nacos配置文件，如下面配置文件，需要在alicloud-web.yml中增加
+   
    ```yaml
    spring：
      cloud:
@@ -55,6 +57,7 @@ curl -X GET "http://49.4.114.32:8848/nacos/v1/cs/configs?dataId=nacos.cfg.dataId
    ```
 
 Nacos配置文件示例：
+
 ```yaml
 # bootstrap.yml
 spring:
@@ -81,5 +84,4 @@ spring:
       web-context-unify: true
       transport:
         dashboard: localhost:8858
-
 ```

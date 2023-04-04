@@ -154,7 +154,6 @@ docker port mysql 
 ```shell
 # 分别在容器和宿主机验证主机名，为centos 设置主机名
 docker run -d -t -h container centos
-
 ```
 
 ## 容器网格
@@ -261,3 +260,29 @@ exit
 cd 挂载源路径
 cat test.out
 ```
+
+4. 容器监控和日志管理
+   
+   1. 容器原生监控管理
+   
+   ```shell
+   # 使用docker ps命令查询正在运行的容器，并选择任意一个容器使用top命令查询容器内进程信息
+   docker ps
+   docker top containerID 
+   # 查询容器资源状态，
+   docker stats
+   # 如果要专注于某个特定容器，则使用docker stats 容器ID
+   docker stats 容器ID
+   ```
+   
+   2. 容器原生日志管理
+   
+   ```shell
+   # 查询容器日志system journal
+   journalctl -b CONTAINER_NAME=任意容器名
+   # 查询容器日志 docker logs
+   docker logs 任意容器ID
+   # 查询docker 服务日志
+   journalctl -u docker.service
+   
+   ```

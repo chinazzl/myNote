@@ -47,6 +47,9 @@ docker run -d -p 8848:8848 -e MODE=standalone -e PREFER_HOST_MODE=hostname -v /r
 docker run -d -p 5672:5672 -p 15672:15672 --name rabbitmq rabbitmq:management
 
 
+## MYSQL
+docker run -it -d --name mysql --net=host -m 500m -v /root/mysql/data:/var/lib/mysql -v /root/mysql/config:/etc/mysql/conf.d  -e MYSQL_ROOT_PASSWORD=passwd -e TZ=Asia/Shanghai mysql --lower_case_table_names=1
+
 
 http://localhost:7001/kie-drools-wb/maven2wb/com/testdemo/StudentProject/1.0.0/StudentProject-1.0.0.jar
 

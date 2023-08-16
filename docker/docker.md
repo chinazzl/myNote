@@ -1,5 +1,23 @@
 # Docker
 
+## 安装docker
+
+#### 环境预制
+   1. 关闭防火墙 systemctl stop firewalld && systemctl disable firewalld
+   2. setenforce 0
+   3. yum install -y yum-utils
+   4. yum-config-manager --add-repo https://sandbox-expriment-files.obs.cn-north-1.myhuaweicloud.com:443/study-container/docker-ce.repo
+#### 安装docker
+1. yum install -y docker-ce docker-ce-cli containerd.io
+2. curl -sSL https://get.daocloud.io/docker | sh
+#### 启动并开启docker
+systemctl start docker && systemctl enable docker
+
+#### 配置环境源
+1. vi /etc/docker/daemon.json
+2. systemctl restart docker
+
+
 ## Docker File
 
 - Dockerfile是要给文本文件，其内包含了一条条的指令，每一条指令构建一层，因此每一条指令的内容，就是描述该层如何构建。

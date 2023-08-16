@@ -101,7 +101,7 @@ Rebalance 是 Kafka 消费者端实现高可用的重要手段。
 
 **「OSR（Out Sync Replicas）」**：follower 副本与 leader 副本没有完全同步或滞后的副本集合
 
-**「ISR（In Sync Replicas）：\**「AR 中的一个子集，ISR 中的副本都」\**是与 leader 保持完全同步的副本」**，如果某个在 ISR 中的 follower 副本落后于 leader 副本太多，则会被从 ISR 中移除，否则如果完全同步，会从 OSR 中移至 ISR 集合。
+**「ISR（In Sync Replicas）：\**「AR 中的一个子集，ISR 中的副本\**是与 leader 保持完全同步的副本」**，如果某个在 ISR 中的 follower 副本落后于 leader 副本太多，则会被从 ISR 中移除，否则如果完全同步，会从 OSR 中移至 ISR 集合。
 
 在默认情况下，当 leader 副本发生故障时，只有在 ISR 集合中的 follower 副本才有资格被选举为新 leader，而 OSR 中的副本没有机会（可以通过`unclean.leader.election.enable`进行配置）
 

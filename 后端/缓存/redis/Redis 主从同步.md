@@ -1,6 +1,6 @@
 ## Redis 主从同步
 
-![slave](../../assert/redisMaster-Slavepng.png)
+![slave](../../assets/redisMaster-Slavepng.png)
 
 Redis主从同步包括三个阶段。
 

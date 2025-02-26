@@ -58,7 +58,7 @@ varchar在存取方面与char相反，它存取慢，因为长度不固定，但
 #### UNION与UNIONALL的区别？
 
 如果使用UNION ALL，不会合并重复的记录行
-如果使用UNION ALL，不会合并重复的记录行
+
 **效率 UNION 高于 UNION ALL**   
 
 #### 查询过程中数据访问优化

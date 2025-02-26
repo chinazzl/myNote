@@ -41,14 +41,18 @@ epoch（ 时期; 纪元; 世; 新时代）用来标识 leader 周期，如果有
 
 #### zookeeper应用场景
 
-1. 数据发布/订阅
-2. 负载均衡
+1. 数据发布/订阅 
+   ∙ 数据存储：将数据（配置信息）存储到 Zookeeper 上的一个数据节点
+   ∙ 数据获取：应用在启动初始化节点从 Zookeeper 数据节点读取数据，并在该节点上注册一个数据变更 Watcher
+   ∙ 数据变更：当变更数据时，更新 Zookeeper 对应节点数据，Zookeeper会将数据变更通知发到各客户端，客户端接到通知后重新读取变更后的数据即可。
+2. 负载均衡：一致性哈希策略
+   zk 的命名服务命名服务是指通过指定的名字来获取资源或者服务的地址，利用 zk 创建一个全局的路径，这个路径就可以作为一个名字，指向集群中的集群，提供的服务的地址，或者一个远程的对象等等。
+   使用zookeeper的临时节点来维护server的地址列表，然后选择负载均衡策略来对请求进行分配。
 3. 命名服务
 4. 分布式协调/通知
 5. 集群管理
 6. Master选举
 7. 分布式锁
-8. 分布式队列数据发布/订阅
 
 ```plantuml
 @startuml "zokeeper lock"
@@ -122,3 +126,18 @@ leader 和 server 具有相同的系统状态。
 一旦 leader 已经和多数的 follower 进行了状态同步后，它就可以开始广播消息 了，即进入广播状态。这时候当一个 server 加入 ZooKeeper 服务中，它会在 恢复模式下启动，
 发现 leader，并和 leader 进行状态同步。待到同步结束，它也参与消息广播。ZooKeeper 服务一直维持在 Broadcast 状态，直到 leader 崩溃了或者 leader 失去了大部分的
 followers 支持。
+
+#### Zookeeper 崩溃如何进行恢复
+
+在Zookeeper集群服务的运行过程中，如果Leader节点发生故障，无法处理Follower节点提交的事务请求，根据ZAB协议，此时的Zookeeper集群就会暂时停止对外提供服务，进入崩溃恢复。如果此时崩溃的Leader服务故障被排除，加入到Zookeeper集群中，它也会进入Looking状态，参与选举
+   1. Leader election
+      在Leader选举阶段，Zookeeper服务都为Looking状态，每个Zookeeper服务都会用自身的ZXID和myid值形成选票，第一轮选举和Zookeeper启动时第一轮选举的结果一样，Zookeeper服务的选票信息都是自身的信息，所以不会产生Leader，无Leader产生Zookeeper服务就会更新自身的选票信息，进入下一轮选举，直到选举出Leader。
+      这一阶段选举出来的Leader还不能直接作为真正的Leader去处理事务请求，它还需要再次确认自身的数据是最新的，避免网络等原因出现多个Leader情况，接下来进入Discovery发现阶段
+
+   2. Discovery
+      在Discovery发现阶段，上一阶段产生的Follower服务会把自身的ZXID中的epoch纪元值发送给Leader服务，Leader服务接收到所有的Follower的epoch纪元值后选出其中最大的epoch纪元值，然后在基础上进行+1，作为最新的epoch纪元值，返回给所有的Follower。
+      Follower接收到Leader发送的最新epoch纪元值后，根据此epoch纪元值来更新自己的ZXID，然后再把更新后的ZXID、最新的历史事务日志和ACK确认信息返回给Leader。
+      Leader接收到ACK确认信息后，把接收到最新的ZXID和最新的历史事务日志和自身作比较，把最新的更新到自身。然后进入下一个阶段 Synchronization接通弧阶段
+      
+   3. Synchronization
+      Synchronization同步阶段的主要作用是把Leader最新的数据和日志同步到Follower中，当半数以上的Follower同步数据成功后，Leader才能成为真正的Leader，就可以处理事务请求了。

@@ -1,0 +1,15 @@
+@startuml entity
+
+entity "user" {
+  +id: int
+  name: varchar
+}
+
+entity "user_info" {
+  +id: int
+  user_id: int
+  age: int
+}
+
+user |o--|| user_info
+@enduml

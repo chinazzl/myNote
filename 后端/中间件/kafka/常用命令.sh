@@ -15,7 +15,7 @@ bin/kafka-topics.sh --list --zookeeper localhost:2181
 bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic topicName --from-beginning
 
 # 5.1 查询topic
-./bin/kafka-topics.sh --bootstrap-server hadoop102:9092
+./bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --describe
 # 5.2 创建topic
 ./bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --create --topic first --partitions 4 --replication-factor 2
 # 5.3 查看topic 为 first的 详细信息

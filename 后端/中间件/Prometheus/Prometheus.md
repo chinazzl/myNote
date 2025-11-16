@@ -34,12 +34,14 @@ After=network.target
 Type=simple
 User=prometheus
 # 这里指定端口和其他参数
+# ⚠️ \后面不能有空格！
 ExecStart=/usr/local/bin/prometheus \
   --config.file=/etc/prometheus/prometheus.yml \
   --storage.tsdb.path=/var/lib/prometheus/ \
   --web.listen-address=":9091" \
-  --web.enable-lifecycle
-
+  --web.enable-lifecycle \
+  --web.enable-admin-api \
+  --storage.tsdb.retention.time=7d
 Restart=on-failure
 
 [Install]
@@ -50,7 +52,27 @@ WantedBy=multi-user.target
 
 ```bash
 sudo useradd --no-create-home --shell /bin/false prometheus
-sudo chown -R prometheus:prometheus /etc/prometheus /var/lib/prometheus
+
+# 1. 移动Prometheus到标准位置
+sudo mv /root/sofware/prometheus-3.7.3.linux-amd64 /opt/prometheus
+
+# 2. 创建软链接（方便以后升级）
+sudo ln -s /opt/prometheus/prometheus /usr/local/bin/prometheus
+
+# 3. 创建配置和数据目录
+sudo mkdir -p /etc/prometheus
+sudo mkdir -p /var/lib/prometheus
+
+# 4. 复制配置文件
+sudo cp /opt/prometheus/prometheus.yml /etc/prometheus/
+sudo cp -r /opt/prometheus/consoles /etc/prometheus/
+sudo cp -r /opt/prometheus/console_libraries /etc/prometheus/
+
+# 5. 修改所有权
+sudo chown -R prometheus:prometheus /opt/prometheus
+sudo chown -R prometheus:prometheus /etc/prometheus
+sudo chown -R prometheus:prometheus /var/lib/prometheus
+sudo chown prometheus:prometheus /usr/local/bin/prometheu
 ```
 
 ### 3. 启动服务
@@ -79,7 +101,9 @@ ExecStart=/usr/local/bin/prometheus \
   --web.listen-address=":9091" \
   --web.enable-lifecycle \           # 允许通过API重载配置
   --web.enable-admin-api \           # 启用管理API
-  --storage.tsdb.retention.time=15d  # 数据保留15天
+  --storage.tsdb.retention.time=15d \  # 数据保留15天
+  --web.console.templates=/etc/prometheus/consoles \
+  --web.console.libraries=/etc/prometheus/console_libraries
 ```
 
 ## 快速验证
@@ -91,6 +115,15 @@ ss -tlnp | grep 9091
 # 测试访问
 curl http://localhost:9091/metrics
 
-# 查看日志
+# 查看实时日志
 sudo journalctl -u prometheus -f
+
+# 重启服务
+sudo systemctl restart prometheus
+
+# 停止服务
+sudo systemctl stop prometheus
+
+# 重新加载配置（需要先启用--web.enable-lifecycle）
+curl -X POST http://localhost:29091/-/reload
 ```

@@ -95,7 +95,7 @@ public class EncryptResponseBodyAdvice implements ResponseBodyAdvice<Object> {
                                  Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                  ServerHttpRequest request,
                                  ServerHttpResponse response) {
-        if (body == null) {
+        if (body == null) { 
             return null;
         }
         
